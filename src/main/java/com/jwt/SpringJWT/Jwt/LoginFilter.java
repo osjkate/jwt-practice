@@ -1,5 +1,6 @@
 package com.jwt.SpringJWT.Jwt;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,12 +27,20 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String password = null;
 
         // json 으로 받기위한 처리
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> jsonRequest = objectMapper.readValue(request.getInputStream(), Map.class);
-            username = jsonRequest.get("username");
-            password = jsonRequest.get("password");
-        } catch (IOException e) {}
+        if ("application/json".equals(request.getContentType())) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, String> jsonRequest = objectMapper.readValue(request.getInputStream(), new TypeReference<Map<String, String>>() {});
+                username = jsonRequest.get("username");
+                password = jsonRequest.get("password");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            username = obtainUsername(request);
+            password = obtainPassword(request);
+        }
+
 
 
         System.out.println(username);
@@ -43,11 +52,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-
+        System.out.println("successed");
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
-
+        System.out.println("failed");
     }
 }
